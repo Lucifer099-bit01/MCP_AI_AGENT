@@ -5,26 +5,31 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 config();
 
+//gemini setup
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 let tools = [];
 
+//mcp setup
 const mcpClient = new Client({
   name: "First-Mcp-deploy",
   version: "1.0.0",
 });
 
+//chathistory for ai
 const chatHistory = [];
+//read instructions from user by the command line
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
 
+//connect to mcp server
 mcpClient
   .connect(new SSEClientTransport(new URL("http://localhost:3001/sse")))
   .then(async () => {
     console.log("connected to mcp server");
     chatLoop();
-
+    // listing tools from mcp server
     tools = (await mcpClient.listTools()).tools.map((tool) => {
       return {
         name: tool.name,
@@ -38,8 +43,8 @@ mcpClient
     });
   });
 
+  // Function to call the AI model and handle tool calls (main function)
 async function chatLoop(toolcall) {
-
   if (toolcall) {
     chatHistory.push({
       role: "model",
@@ -82,7 +87,7 @@ async function chatLoop(toolcall) {
     config: {
       tools: [
         {
-          functionDeclarations: tools,
+          functionDeclarations: tools, // function declarations from mcp server
         },
       ],
     },
